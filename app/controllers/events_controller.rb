@@ -8,6 +8,7 @@ class EventsController < ApplicationController
       return 201
     else
       return 400
+    end
   end
 
 private
