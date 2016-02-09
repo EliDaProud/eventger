@@ -1,13 +1,14 @@
 class EventsController < ApplicationController
+  skip_before_action :verify_authenticity_token
   respond_to :json
 
   def create
     event = Event.new(event_params)
-    if event.valid
+    if event.valid?
       event.save!
-      return 201
+      render json: 201
     else
-      return 400
+      render json: 400
     end
   end
 
