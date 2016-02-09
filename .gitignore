@@ -11,3 +11,14 @@
 /log/*
 !/log/.keep
 /tmp
+
+Gemfile.lock
+.env.development
+.env.development_staging
+.env.test
+.env.local
+.DS_Store
+Procfile.dev
+.rake_tasks~
+logfile
+public/assets
