@@ -2,24 +2,38 @@ class ApplicationController < ActionController::Base
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :null_session
-
+  require 'rest_client'
   before_action :authenticate
 
   def authenticate
-    # require "uri"
-    # require "net/http"
-    #
-    # Net::HTTP.post_form(URI.parse('http://www.interlacken.com/webdbdev/ch05/formpost.asp'), {})
+    # Authorization already exists
+    if authorization = Authorization.find_by(token: params["token"])
+      @current_user = authorization.user
+    # Authorization doesnt exist yet - either a new user or existing one with expired token
+    else
+      user_info = get_user_info
+      if user_info
+        isid = user_info["isid"]
+        @current_user = User.find_or_create_by(isid: isid)
+        @current_user.authorization = Authorization.new(token: params[:token])
+      end
+    end
+  end
 
-    require "net/http"
-    require "uri"
+  private
 
-    uri = URI.parse("https://iapi.merck.com/oauth2/v1/userinfo")
-    http = Net::HTTP.new(uri.host, uri.port)
-    api_request = Net::HTTP::Get.new(uri.request_uri)
-    api_request.initialize_http_header({Authorization: "Bearer x"})
-    binding.pry
-    res = http.request(api_request)
-    puts res.body
+  # if the token is valid, it returns user data
+  def get_user_info
+    begin
+      response = RestClient.get 'https://iapi.merck.com/oauth2/v1/userinfo',
+                                      { 'Authorization' => 'Bearer ' + params["token"] }
+    rescue RestClient::Unauthorized => e
+      puts 'You are so unauthorized :O'
+      puts e.inspect
+    end
+
+    if response.try(:code) == 200 
+      JSON.parse(response)
+    end
   end
 end

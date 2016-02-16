@@ -4,7 +4,11 @@ class EventsController < ApplicationController
 
   def index
     events = Event.all
-    render json: events
+    if @current_user
+      render json: events
+    else
+      render json: {}, status: 401
+    end
   end
 
   api :POST, '/events'
