@@ -4,6 +4,7 @@ class EventsController < ApplicationController
 
   def index
     events = Event.all
+
     if current_user
       render json: events
     else
