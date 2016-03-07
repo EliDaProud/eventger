@@ -23,11 +23,17 @@ class EventsController < ApplicationController
 
   def create
     event = Event.new(event_params)
-    if event.valid?
-      event.save!
-      render json: 201
+
+    if current_user
+      event.author = current_user
+      if event.valid?
+        event.save!
+        render json: {}, status: 201
+      else
+        render json: {error: event.errors.messages}, status: 400
+      end
     else
-      render json: 400
+      render json: {}, status: 401
     end
   end
 
