@@ -2,6 +2,9 @@ class EventsController < ApplicationController
   skip_before_action :verify_authenticity_token
   respond_to :json
 
+  api :GET, '/events'
+  param :token, String, desc: "Authorization token", required: true
+
   def index
     events = Event.all
 
@@ -13,6 +16,7 @@ class EventsController < ApplicationController
   end
 
   api :POST, '/events'
+  param :token, String, desc: "Authorization token", required: true
   param :event, Hash, desc: "Wrapper key", required: true do
     param :title, String, desc: "Title of the event", required: true
     param :description, String, desc: "Description of the event", required: true
