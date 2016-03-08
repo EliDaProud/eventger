@@ -5,6 +5,8 @@ class EventsController < ApplicationController
   api!
   description "Endpoint for getting all events, regardless if current user joined or not"
   param :token, String, desc: "Authorization token", required: true
+  error code: 400, desc: "Token is missing"
+  error code: 401, desc: "Wrong authorization token"
   example "{
     id: 2,
     icon: 'icon',
@@ -38,6 +40,7 @@ class EventsController < ApplicationController
   end
   error code: 401, desc: "Wrong authorization token"
   error code: 400, desc: "Event is not valid"
+  error code: 400, desc: "Token is missing"
 
   def create
     event = Event.new(event_params)
@@ -58,6 +61,7 @@ class EventsController < ApplicationController
   api!
   param :token, String, desc: "Authorization token", required: true
   param :id, Integer, desc: "ID for the event", required: true
+  error code: 400, desc: "Token is missing"
   error code: 401, desc: "Wrong authorization token"
   error code: 403, desc: "User is not the author of the event"
 
@@ -79,6 +83,7 @@ class EventsController < ApplicationController
   api!
   param :token, String, desc: "Authorization token", required: true
   param :id, Integer, desc: "ID for the event", required: true
+  error code: 400, desc: "Token is missing"
   error code: 401, desc: "Wrong authorization token"
 
   def join
@@ -95,6 +100,7 @@ class EventsController < ApplicationController
   api!
   param :token, String, desc: "Authorization token", required: true
   param :id, Integer, desc: "ID for the event", required: true
+  error code: 400, desc: "Token is missing"
   error code: 401, desc: "Wrong authorization token"
 
   def leave
