@@ -3,7 +3,19 @@ class EventsController < ApplicationController
   respond_to :json
 
   api :GET, '/events'
+  description "Endpoint for getting all events, regardless if current user joined or not"
   param :token, String, desc: "Authorization token", required: true
+  example "{
+    id: 2,
+    icon: 'icon',
+    title: 'rrrr',
+    description: 'some text',
+    start_time: '2016-03-09T12:25:04.907Z',
+    end_time: '2016-03-11T12:25:14.195Z',
+    user_id: 3,
+    created_at: '2016-02-09T16:07:37.470Z',
+    updated_at: '2016-03-08T12:25:31.149Z'
+    }"
 
   def index
     events = Event.all

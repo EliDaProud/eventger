@@ -91,4 +91,32 @@ RSpec.describe EventsController do
       expect(response.body).to eq("{\"error\":{\"title\":[\"can't be blank\"]}}")
     end
   end
+
+  describe 'DESTROY delete' do
+    it 'deletes my event' do
+      user = User.create(isid: 'dostalov')
+      authorization = Authorization.create(token: 'some valid token')
+      user.authorization = authorization
+
+      event = Event.create(title: "Cool event!", description: "It will be amazing!", start_time: 1.day.from_now, end_time: 4.days.from_now, icon: "some icon")
+      event.author = user
+      event.save!
+
+      delete :destroy, { token: 'some valid token', id: event.id }
+      expect(response.code).to eq("200")
+      expect(Event.all.size).to eq(0)
+    end
+
+    it ' does not delete foreign event' do
+      user = User.create(isid: 'dostalov')
+      authorization = Authorization.create(token: 'some valid token')
+      user.authorization = authorization
+
+      event = Event.create(title: "Cool event!", description: "It will be amazing!", start_time: 1.day.from_now, end_time: 4.days.from_now, icon: "some icon")
+
+      delete :destroy, { token: 'some valid token', id: event.id }
+      expect(response.code).to eq("403")
+      expect(Event.all.size).to eq(1)
+    end
+  end
 end
