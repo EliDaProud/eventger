@@ -2,7 +2,7 @@ class EventsController < ApplicationController
   skip_before_action :verify_authenticity_token
   respond_to :json
 
-  api :GET, '/events'
+  api!
   description "Endpoint for getting all events, regardless if current user joined or not"
   param :token, String, desc: "Authorization token", required: true
   example "{
@@ -27,7 +27,7 @@ class EventsController < ApplicationController
     end
   end
 
-  api :POST, '/events'
+  api!
   param :token, String, desc: "Authorization token", required: true
   param :event, Hash, desc: "Wrapper key", required: true do
     param :title, String, desc: "Title of the event", required: true
@@ -76,6 +76,11 @@ class EventsController < ApplicationController
     end
   end
 
+  api!
+  param :token, String, desc: "Authorization token", required: true
+  param :id, Integer, desc: "ID for the event", required: true
+  error code: 401, desc: "Wrong authorization token"
+
   def join
     event = Event.find(params[:id])
 
@@ -87,8 +92,20 @@ class EventsController < ApplicationController
     end
   end
 
-  def leave
+  api!
+  param :token, String, desc: "Authorization token", required: true
+  param :id, Integer, desc: "ID for the event", required: true
+  error code: 401, desc: "Wrong authorization token"
 
+  def leave
+    event = Event.find(params[:id])
+
+    if current_user
+      current_user.events.delete(event)
+      render json: {}, status: 200
+    else
+      render json: {}, status: 401
+    end
   end
 
 private

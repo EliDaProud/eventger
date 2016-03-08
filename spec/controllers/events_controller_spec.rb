@@ -143,4 +143,20 @@ RSpec.describe EventsController do
     #   expect(response.code).to eq('404')
     # end
   end
+
+  describe 'DELETE leave' do
+    it 'allows users to leave' do
+      user = User.create(isid: 'dostalov')
+      authorization = Authorization.create(token: 'some valid token')
+      user.authorization = authorization
+
+      event = Event.create(title: "Cool event!", description: "It will be amazing!", start_time: 1.day.from_now, end_time: 4.days.from_now, icon: "some icon")
+      user.events << event
+      expect(event.users).to eq([user])
+
+      delete :leave, {token: 'some valid token', id: event.id }
+      expect(response.code).to eq('200')
+      expect(event.users.reload).to eq([])
+    end
+  end
 end
