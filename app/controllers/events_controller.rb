@@ -76,6 +76,21 @@ class EventsController < ApplicationController
     end
   end
 
+  def join
+    event = Event.find(params[:id])
+
+    if current_user
+      event.users << current_user
+      render json: {}, status: 200
+    else
+      render json: {}, status: 401
+    end
+  end
+
+  def leave
+
+  end
+
 private
 
   def event_params

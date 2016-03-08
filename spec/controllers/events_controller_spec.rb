@@ -107,7 +107,7 @@ RSpec.describe EventsController do
       expect(Event.all.size).to eq(0)
     end
 
-    it ' does not delete foreign event' do
+    it 'does not delete foreign event' do
       user = User.create(isid: 'dostalov')
       authorization = Authorization.create(token: 'some valid token')
       user.authorization = authorization
@@ -118,5 +118,29 @@ RSpec.describe EventsController do
       expect(response.code).to eq("403")
       expect(Event.all.size).to eq(1)
     end
+  end
+
+  describe 'POST join' do
+    it 'allows users to join' do
+      user = User.create(isid: 'dostalov')
+      authorization = Authorization.create(token: 'some valid token')
+      user.authorization = authorization
+
+      event = Event.create(title: "Cool event!", description: "It will be amazing!", start_time: 1.day.from_now, end_time: 4.days.from_now, icon: "some icon")
+
+      post :join, {token: 'some valid token', id: event.id }
+      expect(response.code).to eq('200')
+      expect(event.users).to eq([user])
+    end
+
+    # TODO implement this!
+    # it 'returns 404 for unknown event' do
+    #   user = User.create(isid: 'dostalov')
+    #   authorization = Authorization.create(token: 'some valid token')
+    #   user.authorization = authorization
+    #
+    #   post :join, {token: 'some valid token', id: 666 }
+    #   expect(response.code).to eq('404')
+    # end
   end
 end
