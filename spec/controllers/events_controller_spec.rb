@@ -26,8 +26,12 @@ RSpec.describe EventsController do
       user.authorization = authorization
 
       get :index, token: "some valid token"
-      expect(JSON.parse(response.body).size).to eq(3)
-      expect(JSON.parse(response.body)[0]["title"]).to eq("Cool event!")
+
+      events = JSON.parse(response.body)["events"]
+      type = JSON.parse(response.body)["type"]
+      expect(events.size).to eq(3)
+      expect(events[0]["title"]).to eq("Cool event!")
+      expect(type).to eq("All events")
     end
 
     it "return data and create new user" do
@@ -45,11 +49,33 @@ RSpec.describe EventsController do
 
       get :index, token: "some valid token"
 
-      expect(JSON.parse(response.body).size).to eq(3)
-      expect(JSON.parse(response.body)[0]["title"]).to eq("Cool event!")
+      events = JSON.parse(response.body)["events"]
+      expect(events.size).to eq(3)
+      expect(events[0]["title"]).to eq("Cool event!")
 
       expect(User.first.isid).to eq('dostalov')
       expect(User.first.authorization.token).to eq('some valid token')
+    end
+
+    it 'handles created and joined events' do
+      user = User.create(isid: "dostalov")
+      authorization = Authorization.create(token: "some valid token")
+      user.authorization = authorization
+      event = Event.last
+      event.users = [user]
+
+      get :index, { token: "some valid token", joined: true }
+
+      events = JSON.parse(response.body)["events"]
+      type = JSON.parse(response.body)["type"]
+      expect(events.size).to eq(1)
+      expect(type).to eq("Joined events")
+
+      get :index, { token: "some valid token", created: true }
+      events = JSON.parse(response.body)["events"]
+      type = JSON.parse(response.body)["type"]
+      expect(events.size).to eq(0)
+      expect(type).to eq("Created events")
     end
   end
 
@@ -107,7 +133,7 @@ RSpec.describe EventsController do
       expect(Event.all.size).to eq(0)
     end
 
-    it ' does not delete foreign event' do
+    it 'does not delete foreign event' do
       user = User.create(isid: 'dostalov')
       authorization = Authorization.create(token: 'some valid token')
       user.authorization = authorization
@@ -117,6 +143,46 @@ RSpec.describe EventsController do
       delete :destroy, { token: 'some valid token', id: event.id }
       expect(response.code).to eq("403")
       expect(Event.all.size).to eq(1)
+    end
+  end
+
+  describe 'POST join' do
+    it 'allows users to join' do
+      user = User.create(isid: 'dostalov')
+      authorization = Authorization.create(token: 'some valid token')
+      user.authorization = authorization
+
+      event = Event.create(title: "Cool event!", description: "It will be amazing!", start_time: 1.day.from_now, end_time: 4.days.from_now, icon: "some icon")
+
+      post :join, {token: 'some valid token', id: event.id }
+      expect(response.code).to eq('200')
+      expect(event.users).to eq([user])
+    end
+
+    # TODO implement this!
+    # it 'returns 404 for unknown event' do
+    #   user = User.create(isid: 'dostalov')
+    #   authorization = Authorization.create(token: 'some valid token')
+    #   user.authorization = authorization
+    #
+    #   post :join, {token: 'some valid token', id: 666 }
+    #   expect(response.code).to eq('404')
+    # end
+  end
+
+  describe 'DELETE leave' do
+    it 'allows users to leave' do
+      user = User.create(isid: 'dostalov')
+      authorization = Authorization.create(token: 'some valid token')
+      user.authorization = authorization
+
+      event = Event.create(title: "Cool event!", description: "It will be amazing!", start_time: 1.day.from_now, end_time: 4.days.from_now, icon: "some icon")
+      user.events << event
+      expect(event.users).to eq([user])
+
+      delete :leave, {token: 'some valid token', id: event.id }
+      expect(response.code).to eq('200')
+      expect(event.users.reload).to eq([])
     end
   end
 end
