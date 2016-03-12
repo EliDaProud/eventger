@@ -18,8 +18,10 @@ class ApplicationController < ActionController::Base
           isid = user_info["isid"]
           @current_user = User.find_or_create_by(isid: isid)
           @current_user.authorization = Authorization.new(token: params[:token])
+        else
+          # Invalid token - user unauthorized!
+          render json: {error: "Token is invalid!"}, status: 401
         end
-        # If user_info did not return anything, current_user is null and it will be checked in other controllers
       end
     else
       render json: {error: "Token parameter is missing!"}, status: 400
@@ -40,6 +42,8 @@ class ApplicationController < ActionController::Base
       JSON.parse(response)
     end
   rescue RestClient::Unauthorized => e
+    # TODO what to do with the exception? :)
     puts 'You are so unauthorized :O'
+    nil
   end
 end

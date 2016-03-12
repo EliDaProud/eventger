@@ -17,7 +17,7 @@ RSpec.describe EventsController do
       get :index, token: "non-existing"
 
       expect(response.status).to eq(401)
-      expect(JSON.parse(response.body)).to eq({})
+        expect(JSON.parse(response.body)).to eq({"error" => "Token is invalid!"})
     end
 
     it "return data if user is recognized and exists" do
