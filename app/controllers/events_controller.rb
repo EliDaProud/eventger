@@ -20,8 +20,8 @@ class EventsController < ApplicationController
     user_id: 3,
     created_at: '2016-02-09T16:07:37.470Z',
     updated_at: '2016-03-08T12:25:31.149Z'
-  }, 
-    type: 'Joined events'}"
+  },
+  type: 'Joined events'}"
 
   example "{
     events: [ ],
@@ -50,25 +50,22 @@ class EventsController < ApplicationController
     created_at: '2016-02-09T16:07:37.470Z',
     updated_at: '2016-03-08T12:25:31.149Z'
   },
-    type: 'All events'}"
+  type: 'All events'}"
 
   def index
     events = Event.all
     type = "All events"
 
-    if current_user
-      if params[:created]
-        events = Event.where(author_id: current_user.id)
-        type = "Created events"
-      elsif params[:joined]
-        # TODO refactor this to a faster solution!!
-        events = Event.all.select { |event| event.user_ids.include? current_user.id }
-        type = "Joined events"
-      end
-      render json: { events: events, type: type }
-    else
-      render json: {}, status: 401
+    if params[:created]
+      events = Event.where(author_id: current_user.id)
+      type = "Created events"
+    elsif params[:joined]
+      # TODO refactor this to a faster solution!!
+      # events = Event.all.select { |event| event.user_ids.include? current_use|.id }
+      events = Event.joins(:events_users).where(["events_users.user_id = ?", current_user.id])
+      type = "Joined events"
     end
+    render json: { events: events, type: type }
   end
 
   api!
@@ -87,16 +84,12 @@ class EventsController < ApplicationController
   def create
     event = Event.new(event_params)
 
-    if current_user
-      event.author = current_user
-      if event.valid?
-        event.save!
-        render json: {}, status: 201
-      else
-        render json: {error: event.errors.messages}, status: 400
-      end
+    event.author = current_user
+    if event.valid?
+      event.save!
+      render json: {}, status: 201
     else
-      render json: {}, status: 401
+      render json: {error: event.errors.messages}, status: 400
     end
   end
 
@@ -110,15 +103,11 @@ class EventsController < ApplicationController
   def destroy
     event = Event.find(params[:id])
 
-    if current_user
-      if event.author == current_user
-        event.destroy
-        render json: {}, status: 200
-      else
-        render json: {error: "You are not author of this event!"}, status: 403
-      end
+    if event.author == current_user
+      event.destroy
+      render json: {}, status: 200
     else
-      render json: {}, status: 401
+      render json: {error: "You are not author of this event!"}, status: 403
     end
   end
 
@@ -131,12 +120,8 @@ class EventsController < ApplicationController
   def join
     event = Event.find(params[:id])
 
-    if current_user
-      event.users << current_user
-      render json: {}, status: 200
-    else
-      render json: {}, status: 401
-    end
+    event.users << current_user
+    render json: {}, status: 200
   end
 
   api!
@@ -148,12 +133,8 @@ class EventsController < ApplicationController
   def leave
     event = Event.find(params[:id])
 
-    if current_user
-      current_user.events.delete(event)
-      render json: {}, status: 200
-    else
-      render json: {}, status: 401
-    end
+    current_user.events.delete(event)
+    render json: {}, status: 200
   end
 
 private
